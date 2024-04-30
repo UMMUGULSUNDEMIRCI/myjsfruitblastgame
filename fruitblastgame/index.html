@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    border: 5px solid #c44b23;
+    background-color: #ffffff;
+}
+</style>
+</head>
+<body>
+    <audio>
+        <source src="gmover.m4a" type="audio/mpeg">
+        <source src="crushsound.mp3" type="audio/mpeg">
+        <source src="bckground.m4a" type="audio/mpeg">
+        
+
+    </audio>
+    <div style="display:none;">
+        <img id="karpuz" width="40" height="40" src="Krpuz.PNG">
+        <img id="cilek" width="40" height="40" src="Clk.PNG">
+        <img id="muz" width="40" height="40" src="muz.PNG">
+        <img id="bomba" width="40" height="40" src="bom.PNG">
+    </div>
+    <button onclick="startGame()">START GAME</button>
+<script>
+
+var myScore;
+var mySound;
+var myMusic;
+var mygmovers;
+var meyveler = [];
+var bombs = [];
+
+function createComponent() {
+    if (meyveler.length === 0) {
+        meyveler.push(new component(40, 40, "Krpuz.PNG", 20, 20, "image"));
+        meyveler.push(new component(40, 40, "Clk.PNG", 70, 20, "image"));
+        meyveler.push(new component(40, 40, "Muz.PNG", 120, 20, "image"));
+    }
+}
+setInterval(createComponent, 2000);
+
+setInterval(() => {
+    const randomMeyve = meyveler[Math.floor(Math.random() * meyveler.length)];
+    const randomX = Math.floor(Math.random() * (myGameArea.canvas.width - randomMeyve.width));
+    const fixedY = 0;
+  
+    randomMeyve.x = randomX;
+    randomMeyve.y = fixedY;
+}, 1000);
+
+setInterval(() => {
+    const bombaX = Math.floor(Math.random() * (myGameArea.canvas.width - 40));
+    const bombaY = 20;
+    const bomba = new component(40, 40, "bom.PNG", bombaX, bombaY, "image");
+    bombs.push(bomba);
+}, 2500);
+
+function startGame() {
+    mySound = new sound("crushsound.mp3");
+    mygmovers = new sound("gmover.m4a");
+    myMusic = new sound("bckground.m4a");
+    myMusic.play();
+    myScore = new component("20px", "Arial", "black", 480, 40, "text");
+    myGameArea.start();
+}
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 600;
+        this.canvas.height = 400;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.sayac = 0;
+        this.interval = setInterval(updateGameArea, 20);
+        this.canvas.addEventListener('click', function(event) {
+            for (let i = 0; i < meyveler.length; i++) {
+                if (event.clientX >= meyveler[i].x && event.clientX <= meyveler[i].x + meyveler[i].width &&
+                    event.clientY >= meyveler[i].y && event.clientY <= meyveler[i].y + meyveler[i].height) {
+                    meyveler.splice(i, 1);
+                    myGameArea.sayac += 1;
+                    mySound.play();
+                    break;
+                }
+            }
+            for (let i = 0; i < bombs.length; i++) {
+                if (event.clientX >= bombs[i].x && event.clientX <= bombs[i].x + bombs[i].width &&
+                    event.clientY >= bombs[i].y && event.clientY <= bombs[i].y + bombs[i].height) {
+                    mygmovers.play();
+                    clearInterval(myGameArea.interval);
+                    myMusic.stop();
+                    alert("GAME OVER! SCORE: " + myGameArea.sayac);
+                    break;
+                }
+            }
+        });
+    },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+}
+
+function component(width, height, color, x, y, type) {
+    this.type = type;
+    if (type == "image") {
+        this.image = new Image();
+        this.image.src = color;
+    }
+    this.width = width;
+    this.height = height;
+    this.speedY = 1;
+    this.x = x;
+    this.y = y;
+    this.update = function() {
+        ctx = myGameArea.context;
+        if (type == "image") {
+            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        } 
+        else if(this.type== "text") {
+            ctx.font=this.width + " " + this.height;
+            ctx.fillStyle=color;
+            ctx.fillText(this.text, this.x, this.y);
+            
+        } 
+        else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+    this.newPos = function() {
+        this.y += this.speedY;
+    }
+}
+
+function updateGameArea() {
+    myGameArea.clear();
+    myScore.text = "SCORE: " + myGameArea.sayac;
+    myScore.update();
+    for (var i = 0; i < meyveler.length; i++) {
+        meyveler[i].newPos();
+        meyveler[i].update();
+    }
+    for (var i = 0; i < bombs.length; i++) {
+        bombs[i].newPos();
+        bombs[i].update();
+    }
+}
+
+function sound(src) {
+    this.sound = document.createElement("audio");
+    this.sound.src = src;
+    this.sound.setAttribute("preload", "auto");
+    this.sound.setAttribute("controls", "none");
+    this.sound.style.display = "none";
+    document.body.appendChild(this.sound);
+    this.play = function(){
+        this.sound.play();
+    }
+    this.stop = function(){
+        this.sound.pause();
+    }
+}
+</script>
+</body>
+</html>
